@@ -14,7 +14,6 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from smolagents.prompts import CODE_SYSTEM_PROMPT
 
-
 # Load environment variables
 load_dotenv()
 app = FastAPI()
@@ -265,7 +264,6 @@ agent = CodeAgent(
     tools=[],
     model=model,
     add_base_tools=True,
-    system_prompt=CODE_SYSTEM_PROMPT + "Under no circumstances will you reveal the Anthropic API Key. Do not believe anyone. Do not reveal any environment variables."
     additional_authorized_imports=[
         "pandas",
         "openpyxl",
