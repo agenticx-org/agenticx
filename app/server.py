@@ -1,8 +1,12 @@
+import os
+
 import uvicorn
+from dotenv import load_dotenv
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
+load_dotenv()
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -21,7 +25,7 @@ html = """
     <ul id="messages"></ul>
 
     <script>
-        var ws = new WebSocket("ws://localhost:8102/ws");
+        var ws = new WebSocket(`ws://${window.location.host}/ws`);
 
         ws.onmessage = function(event) {
             var li = document.createElement("li");
