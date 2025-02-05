@@ -25,7 +25,8 @@ html = """
     <ul id="messages"></ul>
 
     <script>
-        var ws = new WebSocket(`ws://${window.location.host}/ws`);
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        var ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
 
         ws.onmessage = function(event) {
             var li = document.createElement("li");
