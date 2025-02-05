@@ -28,31 +28,68 @@ html = """
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AgenticX: Playground</title>
   <link rel="icon" href="/static/rocket.png" type="image/png">
+  <!-- Include Geist Sans and Geist Mono fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        integrity="sha512-XxZY1F1..."
-        crossorigin="anonymous"
-        referrerpolicy="no-referrer" />
-  <!-- Include highlight.js and its stylesheet -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
-  <!-- Custom CSS for console-like styling -->
   <style>
+    /* Apply Geist Sans as the main font for the page */
+    body {
+      font-family: 'Geist', sans-serif;
+    }
+
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 240 10% 3.9%;
+      --card: 0 0% 100%;
+      --card-foreground: 240 10% 3.9%;
+      --popover: 0 0% 100%;
+      --popover-foreground: 240 10% 3.9%;
+      --primary: 240 5.9% 10%;
+      --primary-foreground: 0 0% 98%;
+      --secondary: 240 4.8% 95.9%;
+      --secondary-foreground: 240 5.9% 10%;
+      --muted: 240 4.8% 95.9%;
+      --muted-foreground: 240 3.8% 46.1%;
+      --accent: 240 4.8% 95.9%;
+      --accent-foreground: 240 5.9% 10%;
+      --destructive: 0 84.2% 60.2%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 240 5.9% 90%;
+      --input: 240 5.9% 90%;
+      --ring: 240 5.9% 10%;
+      --radius: 0.5rem;
+    }
+
     pre code {
       display: block;
       padding: 1rem;
-      background-color: #2d2d2d;
-      color: #f8f8f2;
-      border-radius: 8px;
+      background-color: hsl(var(--secondary));
+      color: hsl(var(--secondary-foreground));
+      border-radius: var(--radius);
       overflow-x: auto;
-      font-family: "Fira Code", monospace;
+      font-family: 'Geist Mono', monospace;
       white-space: pre-wrap;
+    }
+
+    .prose {
+      max-width: none;
+      color: hsl(var(--foreground));
+    }
+
+    .prose pre {
+      background-color: hsl(var(--secondary));
+      border-radius: var(--radius);
+      padding: 1rem;
+      margin: 1rem 0;
     }
   </style>
   <script>
-    // Configure marked to use highlight.js for code blocks
     marked.setOptions({
       highlight: function(code, lang) {
         if (lang && hljs.getLanguage(lang)) {
@@ -63,8 +100,7 @@ html = """
     });
   </script>
 </head>
-<body class="bg-white flex flex-col min-h-screen">
-  <!-- Messages Container -->
+<body class="bg-background text-foreground flex flex-col min-h-screen">
   <main class="flex-1 overflow-y-auto p-4">
     <div class="max-w-3xl mx-auto">
       <ul id="messages" class="space-y-6">
@@ -73,22 +109,21 @@ html = """
     </div>
   </main>
 
-  <!-- Input Container with black top border and white background -->
-  <div class="border-t-2 border-black bg-white p-4">
+  <div class="border-t border-border bg-background p-4">
     <div class="max-w-3xl mx-auto">
-      <div class="flex items-center space-x-2 bg-white rounded-xl border border-black shadow-lg p-2">
-        <button class="p-2 border border-black rounded-lg hover:bg-black hover:text-white transition-colors">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-black">
+      <div class="flex items-center space-x-2 bg-background rounded-lg border border-input shadow-sm p-2">
+        <button class="p-2 hover:bg-secondary rounded-md transition-colors">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-foreground">
             <path d="M12 4V20M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </button>
         <input id="messageInput"
                type="text"
                placeholder="Message ChatGPT..."
-               class="flex-1 px-3 py-2 outline-none text-black"
+               class="flex-1 px-3 py-2 bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
                autofocus>
         <button onclick="sendMessage()"
-                class="bg-black text-white px-4 py-2 rounded-lg border border-black transition-colors hover:bg-white hover:text-black flex items-center space-x-2">
+                class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md transition-colors flex items-center space-x-2">
           <span>Send</span>
         </button>
       </div>
@@ -96,34 +131,31 @@ html = """
   </div>
 
   <script>
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
-    
     function formatStepData(data) {
-      let html = '<div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">';
+      // Updated styling for the agent's (assistant's) card with nicer colors and minimal shadows
+      let html = '<div class="rounded-lg border-2 border-indigo-300 bg-white text-black p-6 shadow-sm">';
       
       // Assistant header
       html += `
         <div class="flex items-start space-x-4 mb-4">
-          <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center">
+          <div class="w-8 h-8 bg-indigo-300 rounded-full flex items-center justify-center">
             <i class="fas fa-robot text-white text-sm"></i>
           </div>
           <div class="flex-1">
             <div class="flex items-center space-x-2">
-              <span class="font-medium text-gray-900">Assistant</span>
+              <span class="font-medium">Assistant</span>
               <span class="text-gray-500 text-sm">${new Date().toLocaleTimeString()}</span>
             </div>
           </div>
         </div>`;
 
-      // The agent is expected to return markdown that includes fenced code blocks.
       if (data.final_answer) {
-        html += `<div class="prose max-w-none">${marked.parse(data.final_answer)}</div>`;
+        html += `<div class="prose">${marked.parse(data.final_answer)}</div>`;
       }
       
       if (data.error) {
         html += `
-          <div class="mt-2 p-3 bg-red-50 text-red-700 rounded-md">
+          <div class="mt-2 p-3 bg-red-50 text-red-600 rounded-md border border-red-300">
             <div class="font-medium">Error</div>
             <div class="text-sm">${data.error}</div>
           </div>`;
@@ -132,11 +164,11 @@ html = """
       if (data.tool_calls) {
         html += `
           <div class="mt-2">
-            <div class="font-medium text-gray-700 mb-2">Tool Calls</div>
+            <div class="font-medium text-gray-600 mb-2">Tool Calls</div>
             ${data.tool_calls.map(tool => `
-              <div class="bg-gray-50 rounded p-3 mb-2">
-                <div class="text-sm font-medium text-gray-700">${tool.name}</div>
-                <pre class="mt-1 text-sm text-gray-600 overflow-x-auto">${tool.arguments}</pre>
+              <div class="bg-gray-50 rounded-md p-3 mb-2 border-l-4 border-indigo-300">
+                <div class="text-sm font-medium">${tool.name}</div>
+                <pre class="mt-1 text-sm text-gray-700 overflow-x-auto">${tool.arguments}</pre>
               </div>
             `).join('')}
           </div>`;
@@ -145,9 +177,9 @@ html = """
       if (data.observations) {
         html += `
           <div class="mt-2">
-            <div class="font-medium text-gray-700 mb-2">Observations</div>
-            <div class="bg-gray-50 rounded p-3">
-              <pre class="text-sm text-gray-600 overflow-x-auto">${data.observations}</pre>
+            <div class="font-medium text-gray-600 mb-2">Observations</div>
+            <div class="bg-yellow-50 rounded-md p-3 border border-yellow-300">
+              <pre class="text-sm text-gray-700 overflow-x-auto">${data.observations}</pre>
             </div>
           </div>`;
       }
@@ -164,20 +196,26 @@ html = """
     }
 
     function formatUserMessage(message) {
+      // Updated styling for the user's message card with consistent design
       return `
-        <div class="flex items-start space-x-4 mb-4">
-          <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-            <i class="fas fa-user text-white text-sm"></i>
-          </div>
-          <div class="flex-1">
-            <div class="flex items-center space-x-2">
-              <span class="font-medium text-gray-900">You</span>
-              <span class="text-gray-500 text-sm">${new Date().toLocaleTimeString()}</span>
+        <div class="rounded-lg border-2 border-green-300 bg-white text-black p-6 shadow-sm">
+          <div class="flex items-start space-x-4">
+            <div class="w-8 h-8 bg-green-300 rounded-full flex items-center justify-center">
+              <i class="fas fa-user text-white text-sm"></i>
             </div>
-            <div class="mt-1 text-gray-800">${message}</div>
+            <div class="flex-1">
+              <div class="flex items-center space-x-2">
+                <span class="font-medium">You</span>
+                <span class="text-gray-500 text-sm">${new Date().toLocaleTimeString()}</span>
+              </div>
+              <div class="mt-1">${message}</div>
+            </div>
           </div>
         </div>`;
     }
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
 
     ws.onmessage = function(event) {
       const messages = document.getElementById("messages");
