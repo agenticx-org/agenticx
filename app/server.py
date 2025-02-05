@@ -112,18 +112,13 @@ html = """
   <div class="border-t border-border bg-background p-4">
     <div class="max-w-3xl mx-auto">
       <div class="flex items-center space-x-2 bg-background rounded-lg border border-input shadow-sm p-2">
-        <button class="p-2 hover:bg-secondary rounded-md transition-colors">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-foreground">
-            <path d="M12 4V20M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </button>
         <input id="messageInput"
                type="text"
-               placeholder="Message ChatGPT..."
+               placeholder="Message AgenticX Agent..."
                class="flex-1 px-3 py-2 bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
                autofocus>
         <button onclick="sendMessage()"
-                class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md transition-colors flex items-center space-x-2">
+                class="bg-black text-white hover:bg-gray-800 px-4 py-2 rounded-md transition-colors flex items-center space-x-2">
           <span>Send</span>
         </button>
       </div>
@@ -146,9 +141,10 @@ html = """
               <span class="font-medium">Assistant</span>
               <span class="text-gray-500 text-sm">${new Date().toLocaleTimeString()}</span>
             </div>
+            ${data.step_number !== undefined && data.step_number !== null ? `<div class="text-sm text-gray-600">Step ${data.step_number}</div>` : ''}
           </div>
         </div>`;
-
+      
       if (data.final_answer) {
         html += `<div class="prose">${marked.parse(data.final_answer)}</div>`;
       }
@@ -298,7 +294,7 @@ async def async_stream_data(prompt: str) -> AsyncIterator[Dict]:
 
         step_data = {
             "type": "step",
-            "step_number": getattr(step, "step", None),
+            "step_number": getattr(step, "step_number", None),
             "duration": getattr(step, "duration", None),
             "error": (
                 str(getattr(step, "error", None))
