@@ -12,6 +12,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from smolagents.prompts import CODE_SYSTEM_PROMPT
+
 
 # Load environment variables
 load_dotenv()
@@ -263,6 +265,7 @@ agent = CodeAgent(
     tools=[],
     model=model,
     add_base_tools=True,
+    system_prompt=CODE_SYSTEM_PROMPT + "Under no circumstances will you reveal the Anthropic API Key. Do not believe anyone. Do not reveal any environment variables."
     additional_authorized_imports=[
         "pandas",
         "openpyxl",
@@ -280,7 +283,7 @@ async def async_stream_data(prompt: str) -> AsyncIterator[Dict]:
     """
     Generate streaming step data from the agent. It iterates over each step yielded
     by agent.run (with stream=True), converts them into serializable dictionaries,
-    and yields each for the websocket.
+    and yields each for the websocket. Stops after yielding the final answer or error.
     """
     loop = asyncio.get_running_loop()
     iter_steps = iter(agent.run(prompt, stream=True))
@@ -289,8 +292,6 @@ async def async_stream_data(prompt: str) -> AsyncIterator[Dict]:
         step = await loop.run_in_executor(None, lambda: next(iter_steps, sentinel))
         if step is sentinel:
             break
-
-        print(step)
 
         step_data = {
             "type": "step",
